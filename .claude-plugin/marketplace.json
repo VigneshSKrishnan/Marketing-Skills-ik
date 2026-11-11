@@ -1,0 +1,12 @@
+{
+  "name": "imagekit-marketing-skills",
+  "description": "Claude Code skills for the ImageKit marketing team",
+  "owner": { "name": "ImageKit Marketing" },
+  "plugins": [
+    {
+      "name": "blog-final-check",
+      "source": "./blog-final-check",
+      "description": "Pre-publish check of one ImageKit blog post against the refresh checklist"
+    }
+  ]
+}

@@ -1,0 +1,4 @@
+/blog/brand-equity/
+/blog/brand-identity/
+/blog/brand-success-digital-asset-management/
+/blog/user-experience-digital-asset-management/

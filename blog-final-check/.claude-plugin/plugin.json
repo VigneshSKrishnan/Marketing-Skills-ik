@@ -1,0 +1,5 @@
+{
+  "name": "blog-final-check",
+  "description": "Checks one ImageKit blog post against the refresh checklist before it is published and gives the writer a report. Report only; never edits the post.",
+  "author": { "name": "ImageKit Marketing" }
+}
