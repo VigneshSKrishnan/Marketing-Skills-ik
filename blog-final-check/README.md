@@ -1,6 +1,8 @@
 # blog-final-check
 
-A Claude Code skill that checks **one** ImageKit blog post against the blog refresh checklist before it is published, and gives the writer a report with a verdict ("Ready to publish" or "Not ready"). It only reports. It never edits the post.
+A Claude Code skill that checks **one** ImageKit blog post against the blog refresh checklist before it is published, and gives the writer a report with a verdict ("Ready to publish" or "Not ready").
+
+It is **read-only**: it reads the post and replies with the report in the chat. It never edits files, saves the report, or runs git commands that change anything or contact GitHub (no fetch, commit, push or pull requests). The only network requests are the checks that external links in the post still work.
 
 It runs three kinds of checks:
 
@@ -124,7 +126,7 @@ To update, `git pull` in your clone and copy the folder again.
 
 What happens:
 
-1. Claude runs `git fetch origin dev` so the previous version of the post is current. The internal-link check compares your file with `git show origin/dev:<path>` (`dev` is the blog repo's default branch). If `origin/dev` or the post's previous version isn't available, that check is skipped and the report says so.
+1. The internal-link check compares your file with your local copy of the `dev` version (`git show origin/dev:<path>`; `dev` is the blog repo's default branch). The report shows the date of the latest commit on your `origin/dev`. The skill doesn't fetch it for you, so run `git fetch origin dev` first if your clone is old. If `origin/dev` or the post's previous version isn't available, that check is skipped and the report says so.
 2. Claude runs `scripts/check_post.py`. It looks up the target keyword for the post's URL in `data/keywords.csv`. If the post isn't there, Claude asks you for the keyword.
 3. External links are requested over the network (redirects followed, 15-second timeout). If there is no network, the report lists the links for you to check by hand.
 4. Claude reads the post and does the review checks.

@@ -1,8 +1,9 @@
 ---
 name: blog-final-check
-description: Final pre-publish check of one ImageKit blog post (src/content/blog/<slug>.mdoc) against the blog refresh checklist. Runs automatic SEO/link/front-matter checks, reviews the writing and ImageKit positioning, asks the writer the manual yes/no questions, and gives one report with a publish verdict. Report only; never edits the post. Use when a writer asks to final-check, pre-publish check, or review a refreshed blog post.
+description: Final pre-publish check of one ImageKit blog post (src/content/blog/<slug>.mdoc) against the blog refresh checklist. Runs automatic SEO/link/front-matter checks, reviews the writing and ImageKit positioning, asks the writer the manual yes/no questions, and gives one report with a publish verdict. Read-only: it reports in the chat and never edits, commits or pushes anything. Use when a writer asks to final-check, pre-publish check, or review a refreshed blog post.
 argument-hint: "[path to post, e.g. src/content/blog/dam-demo.mdoc]"
-allowed-tools: Read, Grep, Glob, Bash(python3 *), Bash(git fetch *), Bash(git rev-parse *), Bash(git show *)
+allowed-tools: Read, Grep, Glob, Bash(python3 *), Bash(git rev-parse *), Bash(git show *), Bash(git log *)
+disallowed-tools: Edit, Write, NotebookEdit, Bash(git push *), Bash(git commit *), Bash(git fetch *), Bash(git pull *), Bash(git add *), Bash(git checkout *), Bash(git reset *), Bash(gh *)
 ---
 
 # Blog final check
@@ -11,7 +12,8 @@ You check **one** ImageKit blog post against the refresh checklist and give the 
 
 ## Rules (always)
 
-- **Never edit the post** or any other file in the blog repo. Report only. Do not offer to apply fixes during the run.
+- **Read-only.** Never edit the post or any other file. Never run commands that change the repo or talk to GitHub: no `git fetch`, `pull`, `add`, `commit`, `push`, `checkout` or `reset`, no `gh`, no pull requests or comments. Don't save the report to a file or post it anywhere.
+- **Respond to the writer in the chat.** After reviewing the results, give the report as your reply. That is the only output. Don't offer to apply the fixes; the writer makes the changes.
 - **Never present a guess as a fact.** If a check can't run (no git history, no network, post not in `keywords.csv`), say exactly that and what the writer should check by hand.
 - **Be concrete.** For every problem, quote the line (with its line number) and give the replacement text.
 
@@ -25,18 +27,14 @@ The writer runs this from a local clone of `imagekit-internal/imagekit-blog`.
 
 ## Step 2: Run the automatic checks
 
-1. Refresh the previous version so the link comparison is current (this only updates remote-tracking refs; it doesn't touch the writer's files):
-   ```bash
-   git fetch origin dev
-   ```
-   If this fails (offline, no remote), carry on. The script will report whether `origin/dev` is usable.
-2. Run the checker from the blog repo root:
+1. Run the checker from the blog repo root. It only reads files (including the `dev` version through `git show origin/dev:<path>`) and requests external links to see if they work:
    ```bash
    python3 "${CLAUDE_SKILL_DIR}/scripts/check_post.py" <post-path>
    ```
+   - The script compares against the writer's local `origin/dev` and prints the date of its latest commit. If `origin/dev` is missing or that date is more than a few days old, say so in the report and tell the writer they can run `git fetch origin dev` themselves and check again. Don't run it for them.
    - If the output says the post is **not in data/keywords.csv**, ask the writer: "This post isn't in our keyword list. What is the target keyword for it?" Then re-run with `--keyword "<their keyword>"`.
    - The script checks external links over the network. If it reports no network access, keep that SKIP in the report and list the links for the writer to check by hand.
-3. Treat the script's `FAIL` / `WARN` / `PASS` / `SKIP` lines as the [Auto] results. Don't change their status. You may add a short note if a result is clearly a false alarm (for example a historical year like "WebP was released in 2010"), but keep it in the list.
+2. Treat the script's `FAIL` / `WARN` / `PASS` / `SKIP` lines as the [Auto] results. Don't change their status. You may add a short note if a result is clearly a false alarm (for example a historical year like "WebP was released in 2010"), but keep it in the list.
 
 ## Step 3: Review checks
 

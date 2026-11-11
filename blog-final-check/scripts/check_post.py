@@ -908,9 +908,12 @@ def run(args):
         ok_ref, ref_err = git(["rev-parse", "--verify", "--quiet", base_ref + "^{commit}"], repo_root)
         if not ok_ref:
             res.add("links", "3+ new internal links", "skip",
-                    f"`{base_ref}` is not available in this clone (run `git fetch origin dev`), so the internal-link "
-                    f"count could not be compared. Current post: {cur_unique} unique internal blog links.")
+                    f"`{base_ref}` is not available in this clone, so the internal-link count could not be compared "
+                    f"(the writer can run `git fetch origin dev` and check again). "
+                    f"Current post: {cur_unique} unique internal blog links.")
         else:
+            ref_date, _ = git(["log", "-1", "--format=%cs", base_ref], repo_root)
+            base_label = f"`{base_ref}` (latest commit {ref_date.strip()})" if ref_date else f"`{base_ref}`"
             old, gerr = git(["show", f"{base_ref}:{rel_path}"], repo_root)
             if old is None:
                 res.add("links", "3+ new internal links", "skip",
@@ -919,7 +922,7 @@ def run(args):
             else:
                 old_total, old_unique = count_blog_links(old)
                 delta = cur_unique - old_unique
-                msg = (f"Links to {cur_unique} different blog posts now vs {old_unique} on `{base_ref}` "
+                msg = (f"Links to {cur_unique} different blog posts now vs {old_unique} on {base_label} "
                        f"({delta:+d}; counting each existing, non-killed post once).")
                 if old == raw:
                     msg += f" The file is identical to `{base_ref}`: no changes made yet."
