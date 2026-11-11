@@ -495,6 +495,10 @@ def judge_filename(src):
     stem_clean = IK_SUFFIX_RE.sub("", stem) if re.search(r"[a-z]{3}", stem.lower()) else stem
     if GENERIC_NAME_RE.match(stem_clean) or CAMERA_RE.match(stem_clean):
         return False, "generic file name", name
+    # e.g. "Screenshot-2023-06-28-at-10.44.46", "Screen Shot 2020-01-01 at 9.15 AM", "image-20240515-091936"
+    gm = re.match(r"^(screen[\s_-]?shot|screenshot|image|img|photo|untitled|unnamed|capture)(.*)$", stem_clean, re.I)
+    if gm and not re.search(r"[a-z]{3,}", re.sub(r"\b(at|am|pm|copy)\b", " ", gm.group(2).lower())):
+        return False, "generic file name", name
     tokens = []
     for t in re.split(r"[\s_\-.()+]+", stem_clean):
         if not t:
@@ -506,8 +510,13 @@ def judge_filename(src):
             tokens.extend(parts)
         else:
             tokens.append(t)
-    words = [t for t in tokens if VOWEL_WORD_RE.match(t.lower()) and re.search(r"[aeiouy]", t.lower())]
+    # a "word" is lowercase, Capitalised or a short ALL-CAPS token; mixed case like "lsipYGHO" is not
+    words = [t for t in tokens if VOWEL_WORD_RE.match(t.lower()) and re.search(r"[aeiouy]", t.lower())
+             and (t.islower() or t.istitle() or (t.isupper() and len(t) <= 8))]
     random_tokens = [t for t in tokens if looks_random(t)]
+    non_word_chars = sum(len(t) for t in tokens if t not in words and not t.isdigit())
+    if len(stem_clean) >= 30 and len(words) < 2 and non_word_chars > 0.5 * sum(len(t) for t in tokens):
+        return False, "looks like a random string", name
     if random_tokens and len(words) < 2:
         return False, "looks like a random string", name
     if not words:
